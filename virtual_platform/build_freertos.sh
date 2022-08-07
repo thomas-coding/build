@@ -7,6 +7,10 @@ shell_folder=$(cd "$(dirname "$0")" || exit;pwd)
 #export PATH="/home/cn1396/.toolchain/gcc-arm-none-eabi-10.3-2021.07/bin/:$PATH"
 
 # Cortex-A arch32
+# 180 server
+#export PATH="/root/workspace/.toolchains/gcc-arm-10.3-2021.07-x86_64-arm-none-eabi/bin/:$PATH"
+#export PATH="/root/workspace/.toolchains/cmake-3.20.5-linux-x86_64/bin/:$PATH"
+
 export PATH="/home/cn1396/.toolchain/gcc-arm-10.3-2021.07-x86_64-arm-none-eabi/bin/:$PATH"
 export CROSS_COMPILE=arm-none-eabi-
 
