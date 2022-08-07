@@ -19,7 +19,7 @@ if [[ ! -d ${examples_dir} ]]; then
 fi
 
 # output
-elf=${shell_folder}/FreeRTOS/FreeRTOS/Demo/CORTEX_M0+_RP2040/build/OnEitherCore/on_core_one.elf
+elf=${shell_folder}/FreeRTOS/FreeRTOS/Demo/CORTEX_M0+_RP2040/build/OnDualCore/on_dual_core.elf
 
 # build makefile
 cd "${examples_dir}" || exit
