@@ -11,5 +11,6 @@ target_config=${shell_folder}/openocd/tcl/target/rp2040.cfg
 source=${shell_folder}/openocd/tcl
 
 cd ${shell_folder}
+#sudo gdb --args ${openocd} -f ${probe_config} -f ${target_config} -s ${source} --debug
 sudo ${openocd} -f ${probe_config} -f ${target_config} -s ${source}
  
