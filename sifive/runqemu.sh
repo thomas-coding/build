@@ -23,4 +23,4 @@ qemu_option+=" -kernel ${demo_elf}"
 qemu_option+=" -nographic"
 
 # run qemu
-/home/cn1396/workspace/code/freerots_smp_repo/qemu/build/riscv32-softmmu/qemu-system-riscv32 ${qemu_option}
+qemu/build/riscv32-softmmu/qemu-system-riscv32 ${qemu_option}
