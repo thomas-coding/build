@@ -4,7 +4,7 @@
 shell_folder=$(cd "$(dirname "$0")" || exit;pwd)
 
 # which demo to compile
-demo_dir=${shell_folder}/threadx/project/thomas_m3
+demo_dir=${shell_folder}/threadx_platform/platform/thomas_m3
 
 qemu_option=
 if [[ $1  = "--gdb" ]]; then
