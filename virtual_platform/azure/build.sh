@@ -9,7 +9,7 @@ if [[ $1  = "h" ]]; then
 	exit
 elif [[ $1  = "thomas_m3" ]]; then
     # which demo to compile
-    platform_dir=${shell_folder}/threadx_platform/platform/thomas_m3
+    platform_dir=${shell_folder}/azure/platform/thomas_m3
 
     # build
     cd "${platform_dir}" || exit
