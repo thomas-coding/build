@@ -37,11 +37,17 @@ build_qemu() {
 	./configure --target-list=aarch64-softmmu --enable-debug
 	make -j8
 
+	if [ $? -ne 0 ]; then
+		echo "failed"
+		exit
+	else
+		echo "succeed"
+	fi
+
 	finish_time=${SECONDS}
 	duration=$((finish_time-start_time))
 	elapsed_time="$((duration / 60))m $((duration % 60))s"
 	echo -e  "Qemu used:${elapsed_time}"
-	exit	
 }
 
 build_atf() {
@@ -63,12 +69,17 @@ build_atf() {
 		BL33=${shell_folder}/u-boot/u-boot.bin \
 		all fip
 
+	if [ $? -ne 0 ]; then
+		echo "failed"
+		exit
+	else
+		echo "succeed"
+	fi
 
 	finish_time=${SECONDS}
 	duration=$((finish_time-start_time))
 	elapsed_time="$((duration / 60))m $((duration % 60))s"
 	echo -e  "ATF used:${elapsed_time}"
-	exit	
 }
 
 build_optee() {
@@ -90,11 +101,17 @@ build_optee() {
 		PLATFORM=virtual_platform \
 		PLATFORM_FLAVOR=a55
 
+	if [ $? -ne 0 ]; then
+		echo "failed"
+		exit
+	else
+		echo "succeed"
+	fi
+
 	finish_time=${SECONDS}
 	duration=$((finish_time-start_time))
 	elapsed_time="$((duration / 60))m $((duration % 60))s"
 	echo -e  "optee used:${elapsed_time}"
-	exit	
 }
 
 build_u-boot() {
@@ -105,6 +122,14 @@ build_u-boot() {
 	make clean
 	make a55_defconfig
 	make
+
+	if [ $? -ne 0 ]; then
+		echo "failed"
+		exit
+	else
+		echo "succeed"
+	fi
+
 	rm -f u-boot.asm
 	${CROSS_COMPILE}objdump -xd u-boot > u-boot.asm
 
@@ -112,7 +137,6 @@ build_u-boot() {
 	duration=$((finish_time-start_time))
 	elapsed_time="$((duration / 60))m $((duration % 60))s"
 	echo -e  "u-boot used:${elapsed_time}"
-	exit	
 }
 
 build_linux() {
@@ -123,6 +147,14 @@ build_linux() {
 	cd ${shell_folder}/linux
 	make a15_defconfig
 	make
+
+	if [ $? -ne 0 ]; then
+		echo "failed"
+		exit
+	else
+		echo "succeed"
+	fi
+
 	make -j2 uImage
 	rm -f vmlinux.asm
 	${CROSS_COMPILE}objdump -xd vmlinux > vmlinux.asm
@@ -132,7 +164,6 @@ build_linux() {
 	duration=$((finish_time-start_time))
 	elapsed_time="$((duration / 60))m $((duration % 60))s"
 	echo -e  "linux used:${elapsed_time}"
-	exit
 }
 
 build_rootfs() {
@@ -142,6 +173,14 @@ build_rootfs() {
 	cd ${shell_folder}/buildroot
 	make a15_defconfig
 	make
+
+	if [ $? -ne 0 ]; then
+		echo "failed"
+		exit
+	else
+		echo "succeed"
+	fi
+
 	rm -f output/images/rootfs.cpio.uboot
 	mkimage -A arm -O linux -T ramdisk -C none -a 0x2c000000 -n "ramdisk" -d  output/images/rootfs.cpio output/images/rootfs.cpio.uboot
 
@@ -149,31 +188,25 @@ build_rootfs() {
 	duration=$((finish_time-start_time))
 	elapsed_time="$((duration / 60))m $((duration % 60))s"
 	echo -e  "rootfs used:${elapsed_time}"
-	exit
 }
 
-if [[ $1  = "h" ]]; then
+for arg in $*
+do
+	if [[ $arg  = "h" ]]; then
 	cmd_help
-	exit
-elif [[ $1  = "qemu" ]]; then
+	elif [[ $arg  = "qemu" ]]; then
 	build_qemu
-	exit
-elif [[ $1  = "atf" ]]; then
+	elif [[ $arg  = "atf" ]]; then
 	build_atf
-	exit
-elif [[ $1  = "optee" ]]; then
+	elif [[ $arg  = "optee" ]]; then
 	build_optee
-	exit
-elif [[ $1  = "uboot" ]]; then
+	elif [[ $arg  = "uboot" ]]; then
 	build_u-boot
-	exit
-elif [[ $1  = "linux" ]]; then
+	elif [[ $arg  = "linux" ]]; then
 	build_linux
-	exit
-elif [[ $1  = "rootfs" ]]; then
+	elif [[ $arg  = "rootfs" ]]; then
 	build_rootfs
-	exit
-elif [[ $1  = "all" ]]; then
+	elif [[ $arg  = "all" ]]; then
 	build_qemu
 	build_atf
 	build_optee
@@ -186,3 +219,4 @@ else
 	cmd_help
 	exit
 fi
+done
