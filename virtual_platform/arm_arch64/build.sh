@@ -15,7 +15,7 @@ export PATH="/home/cn1396/.toolchain/arm-gnu-toolchain-12.2.rel1-x86_64-aarch64-
 export PATH="/root/workspace/code/virtual_platform/u-boot/tools:$PATH"
 
 # For cross compile
-export ARCH=arm
+export ARCH=arm64
 export CROSS_COMPILE=aarch64-none-linux-gnu-
 
 cmd_help() {
@@ -34,7 +34,7 @@ build_qemu() {
 	start_time=${SECONDS}
 
 	cd ${shell_folder}/qemu
-	./configure --target-list=aarch64-softmmu --enable-debug
+	#./configure --target-list=aarch64-softmmu --enable-debug
 	make -j8
 
 	if [ $? -ne 0 ]; then
@@ -57,17 +57,46 @@ build_atf() {
 	cd ${shell_folder}/arm-trusted-firmware
 	rm -rf build
 
-	make \
-		ARCH=aarch64 \
-		PLAT=a55 \
-		CROSS_COMPILE=aarch64-none-elf- \
-		DEBUG=1	\
-		SPD=opteed \
-		BL32=${shell_folder}/optee/optee_os/build/core/tee-header_v2.bin \
-		BL32_EXTRA1=${shell_folder}/optee/optee_os/build/core/tee-pager_v2.bin \
-		BL32_EXTRA2=${shell_folder}/optee/optee_os/build/core/tee-pageable_v2.bin \
-		BL33=${shell_folder}/u-boot/u-boot.bin \
-		all fip
+	# option
+	atf_option_crash_report=0
+	atf_option_secure_boot=1
+	atf_option_secure_boot_encrypt=0
+
+	atf_build_opt=
+	atf_build_opt+=" ARCH=aarch64 "
+	atf_build_opt+=" PLAT=a55 "
+	atf_build_opt+=" CROSS_COMPILE=aarch64-none-elf- "
+	atf_build_opt+=" SPD=opteed "
+	atf_build_opt+=" BL32=${shell_folder}/optee/optee_os/build/core/tee-header_v2.bin "
+	atf_build_opt+=" BL32_EXTRA1=${shell_folder}/optee/optee_os/build/core/tee-pager_v2.bin "
+	atf_build_opt+=" BL32_EXTRA2=${shell_folder}/optee/optee_os/build/core/tee-pageable_v2.bin "
+	atf_build_opt+=" BL33=${shell_folder}/u-boot/u-boot.bin "
+	atf_build_opt+=" all fip "
+
+    if [[ ${atf_option_secure_boot} = 1 ]]; then
+		echo "wjp secure boot enable"
+        atf_build_opt+=" GENERATE_COT=1 "
+        atf_build_opt+=" TRUSTED_BOARD_BOOT=1 "
+        atf_build_opt+=" MBEDTLS_DIR=${shell_folder}/third_party/mbedtls "
+    fi
+
+    if [[ ${atf_option_secure_boot_encrypt} = 1 ]]; then
+        atf_build_opt+=" ENCRYPT_BL31=1 "
+        atf_build_opt+=" ENCRYPT_BL32=1 "
+        atf_build_opt+=" ENC_KEY=1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef "
+        atf_build_opt+=" ENC_NONCE=1234567890abcdef12345678 "
+        atf_build_opt+=" DECRYPTION_SUPPORT=aes_gcm "
+        atf_build_opt+=" ENC_KEY=1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef "
+    fi
+
+    if [[ ${atf_option_crash_report} = 1 ]]; then
+        atf_build_opt+=" ENABLE_ASSERTIONS=1 "
+        atf_build_opt+=" ENABLE_BACKTRACE=1 "
+        atf_build_opt+=" CRASH_REPORTING=1 "
+    fi
+
+
+	make ${atf_build_opt}
 
 	if [ $? -ne 0 ]; then
 		echo "failed"
@@ -143,10 +172,10 @@ build_linux() {
 	echo "Build linux ..."
 	start_time=${SECONDS}
 	# used for make uImage
-	export LOADADDR=0x21008000
+	#export LOADADDR=0x31008000
 	cd ${shell_folder}/linux
-	make a15_defconfig
-	make
+	make a55_defconfig
+	make -j4
 
 	if [ $? -ne 0 ]; then
 		echo "failed"
@@ -155,10 +184,10 @@ build_linux() {
 		echo "succeed"
 	fi
 
-	make -j2 uImage
+	#make -j2 uImage
 	rm -f vmlinux.asm
 	${CROSS_COMPILE}objdump -xd vmlinux > vmlinux.asm
-	${CROSS_COMPILE}objdump -xd arch/arm/boot/compressed/vmlinux > arch/arm/boot/compressed/vmlinux.asm
+	#${CROSS_COMPILE}objdump -xd arch/arm/boot/compressed/vmlinux > arch/arm/boot/compressed/vmlinux.asm
 
 	finish_time=${SECONDS}
 	duration=$((finish_time-start_time))
@@ -193,30 +222,30 @@ build_rootfs() {
 for arg in $*
 do
 	if [[ $arg  = "h" ]]; then
-	cmd_help
+		cmd_help
 	elif [[ $arg  = "qemu" ]]; then
-	build_qemu
+		build_qemu
 	elif [[ $arg  = "atf" ]]; then
-	build_atf
+		build_atf
 	elif [[ $arg  = "optee" ]]; then
-	build_optee
+		build_optee
 	elif [[ $arg  = "uboot" ]]; then
-	build_u-boot
+		build_u-boot
 	elif [[ $arg  = "linux" ]]; then
-	build_linux
+		build_linux
 	elif [[ $arg  = "rootfs" ]]; then
-	build_rootfs
+		build_rootfs
 	elif [[ $arg  = "all" ]]; then
-	build_qemu
-	build_atf
-	build_optee
-	build_u-boot
-	build_linux
-	build_rootfs
-	exit
-else
-	echo "wrong args."
-	cmd_help
-	exit
-fi
+		build_qemu
+		build_atf
+		build_optee
+		build_u-boot
+		build_linux
+		build_rootfs
+		exit
+	else
+		echo "wrong args."
+		cmd_help
+		exit
+	fi
 done
