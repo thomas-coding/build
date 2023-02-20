@@ -122,6 +122,7 @@ build_optee() {
 	rm -rf build
 
 	make \
+		ARCH=arm \
 		CFG_TEE_BENCHMARK=n \
 		CFG_TEE_CORE_LOG_LEVEL=3 \
 		CROSS_COMPILE=aarch64-none-linux-gnu- \
