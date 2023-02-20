@@ -7,6 +7,7 @@ shell_folder=$(cd "$(dirname "$0")" || exit;pwd)
 export PATH="/home/cn1396/.toolchain/gcc-arm-10.3-2021.07-x86_64-aarch64-none-elf/bin/:$PATH"
 
 #-ex "add-symbol-file ${shell_folder}/linux/vmlinux -s .head.text 0x32000000 -s .text 0x32010000 -s .init.text 0x323b0000"
+#-ex "add-symbol-file ${shell_folder}/ramfs/image/init"
 
 # gdb
 aarch64-none-elf-gdb \

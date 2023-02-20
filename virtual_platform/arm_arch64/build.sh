@@ -34,7 +34,7 @@ build_qemu() {
 	start_time=${SECONDS}
 
 	cd ${shell_folder}/qemu
-	#./configure --target-list=aarch64-softmmu --enable-debug
+	./configure --target-list=aarch64-softmmu --enable-debug
 	make -j8
 
 	if [ $? -ne 0 ]; then
@@ -59,8 +59,9 @@ build_atf() {
 
 	# option
 	atf_option_crash_report=0
-	atf_option_secure_boot=1
+	atf_option_secure_boot=0
 	atf_option_secure_boot_encrypt=0
+	atf_option_secure_debug=0
 
 	atf_build_opt=
 	atf_build_opt+=" ARCH=aarch64 "
@@ -74,7 +75,6 @@ build_atf() {
 	atf_build_opt+=" all fip "
 
     if [[ ${atf_option_secure_boot} = 1 ]]; then
-		echo "wjp secure boot enable"
         atf_build_opt+=" GENERATE_COT=1 "
         atf_build_opt+=" TRUSTED_BOARD_BOOT=1 "
         atf_build_opt+=" MBEDTLS_DIR=${shell_folder}/third_party/mbedtls "
@@ -83,10 +83,10 @@ build_atf() {
     if [[ ${atf_option_secure_boot_encrypt} = 1 ]]; then
         atf_build_opt+=" ENCRYPT_BL31=1 "
         atf_build_opt+=" ENCRYPT_BL32=1 "
+        atf_build_opt+=" ENCRYPT_BL2=1 "
         atf_build_opt+=" ENC_KEY=1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef "
         atf_build_opt+=" ENC_NONCE=1234567890abcdef12345678 "
         atf_build_opt+=" DECRYPTION_SUPPORT=aes_gcm "
-        atf_build_opt+=" ENC_KEY=1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef "
     fi
 
     if [[ ${atf_option_crash_report} = 1 ]]; then
@@ -95,8 +95,11 @@ build_atf() {
         atf_build_opt+=" CRASH_REPORTING=1 "
     fi
 
+    if [[ ${atf_option_secure_debug} = 1 ]]; then
+        atf_build_opt+=" SECURE_DEBUG=1 "
+    fi
 
-	make ${atf_build_opt}
+	make clean ${atf_build_opt}
 
 	if [ $? -ne 0 ]; then
 		echo "failed"
@@ -171,11 +174,9 @@ build_u-boot() {
 build_linux() {
 	echo "Build linux ..."
 	start_time=${SECONDS}
-	# used for make uImage
-	#export LOADADDR=0x31008000
 	cd ${shell_folder}/linux
 	make a55_defconfig
-	make -j4
+	make -j8
 
 	if [ $? -ne 0 ]; then
 		echo "failed"
@@ -184,10 +185,8 @@ build_linux() {
 		echo "succeed"
 	fi
 
-	#make -j2 uImage
 	rm -f vmlinux.asm
 	${CROSS_COMPILE}objdump -xd vmlinux > vmlinux.asm
-	#${CROSS_COMPILE}objdump -xd arch/arm/boot/compressed/vmlinux > arch/arm/boot/compressed/vmlinux.asm
 
 	finish_time=${SECONDS}
 	duration=$((finish_time-start_time))
@@ -200,7 +199,8 @@ build_rootfs() {
 	start_time=${SECONDS}
 
 	cd ${shell_folder}/buildroot
-	make a15_defconfig
+	make clean
+	make a55_defconfig
 	make
 
 	if [ $? -ne 0 ]; then
@@ -209,9 +209,6 @@ build_rootfs() {
 	else
 		echo "succeed"
 	fi
-
-	rm -f output/images/rootfs.cpio.uboot
-	mkimage -A arm -O linux -T ramdisk -C none -a 0x2c000000 -n "ramdisk" -d  output/images/rootfs.cpio output/images/rootfs.cpio.uboot
 
 	finish_time=${SECONDS}
 	duration=$((finish_time-start_time))
@@ -236,12 +233,17 @@ do
 	elif [[ $arg  = "rootfs" ]]; then
 		build_rootfs
 	elif [[ $arg  = "all" ]]; then
+		all_start_time=${SECONDS}
 		build_qemu
-		build_atf
 		build_optee
 		build_u-boot
-		build_linux
+		build_atf
 		build_rootfs
+		build_linux
+		all_finish_time=${SECONDS}
+		all_duration=$((all_finish_time-all_start_time))
+		all_elapsed_time="$((all_duration / 60))m $((all_duration % 60))s"
+		echo -e  "build all used:${all_elapsed_time}"
 		exit
 	else
 		echo "wrong args."
