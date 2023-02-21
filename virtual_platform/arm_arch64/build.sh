@@ -238,8 +238,7 @@ EOF
 	make a55_defconfig
 	make \
 		BR2_ROOTFS_USERS_TABLES=${rootfs_user_file} \
-		BR2_TOOLCHAIN_EXTERNAL_PATH=${toolchain_linux_64} \
-		BR2_TOOLCHAIN_EXTERNAL_CUSTOM_PREFIX="aarch64-none-linux-gnu"
+		BR2_TOOLCHAIN_EXTERNAL_PATH=${toolchain_linux_64}
 
 	if [ $? -ne 0 ]; then
 		echo "failed"
