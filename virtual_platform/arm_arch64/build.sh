@@ -23,9 +23,10 @@ cmd_help() {
 	echo "$0 h			---> Command help"
 	echo "$0 qemu		---> Build qemu"
 	echo "$0 u-boot		---> Build u-boot"
-	echo "$0 linux		---> Build linux"
+	echo "$0 kernel		---> Build linux kernel"
 	echo "$0 atf		---> Build arm trusted firmware "
 	echo "$0 rootfs		---> Build rootfs "
+	echo "$0 mkimage	---> Copy thing to rootfs and pack. Copy images"
 	echo "$0 all		---> Build all "
 }
 
@@ -121,6 +122,7 @@ build_optee() {
 	cd ${shell_folder}/optee/optee_os
 	rm -rf build
 
+	# build optee os
 	make \
 		ARCH=arm \
 		CFG_TEE_BENCHMARK=n \
@@ -133,6 +135,32 @@ build_optee() {
 		O=build \
 		PLATFORM=virtual_platform \
 		PLATFORM_FLAVOR=a55
+
+	# build optee clinet
+	cd ${shell_folder}/optee/optee_client
+	rm -rf out
+	make CROSS_COMPILE=aarch64-none-linux-gnu-
+
+	# build optee example hello_world ta
+	export TA_DEV_KIT_DIR=${shell_folder}/optee/optee_os/build/export-ta_arm64
+	cd ${shell_folder}/optee/optee_examples/hello_world/ta
+	make CROSS_COMPILE=aarch64-none-linux-gnu-
+
+	# build optee example hello_world ca
+	cd ${shell_folder}/optee/optee_examples/hello_world/host
+	make \
+		CROSS_COMPILE=aarch64-none-linux-gnu- \
+		TEEC_EXPORT=${shell_folder}/optee/optee_client/out/export/usr \
+		--no-builtin-variables
+
+	# build optee xtest
+	cd ${shell_folder}/optee/optee_test
+	make \
+		CROSS_COMPILE=aarch64-none-linux-gnu- \
+		TA_DEV_KIT_DIR=${shell_folder}/optee/optee_os/build/export-ta_arm64 \
+		OPTEE_CLIENT_EXPORT=${shell_folder}/optee/optee_client/out/export/usr \
+		CROSS_COMPILE=${CROSS_COMPILE} \
+		CFG_TEE_TA_LOG_LEVEL=3
 
 	if [ $? -ne 0 ]; then
 		echo "failed"
@@ -172,8 +200,8 @@ build_u-boot() {
 	echo -e  "u-boot used:${elapsed_time}"
 }
 
-build_linux() {
-	echo "Build linux ..."
+build_kernel() {
+	echo "Build kernel ..."
 	start_time=${SECONDS}
 	cd ${shell_folder}/linux
 	make a55_defconfig
@@ -192,17 +220,24 @@ build_linux() {
 	finish_time=${SECONDS}
 	duration=$((finish_time-start_time))
 	elapsed_time="$((duration / 60))m $((duration % 60))s"
-	echo -e  "linux used:${elapsed_time}"
+	echo -e  "linux kernel used:${elapsed_time}"
 }
 
 build_rootfs() {
 	echo "Build rootfs ..."
 	start_time=${SECONDS}
 
+	# add tee user
+	rootfs_user_file=${shell_folder}/out/add_users.txt
+	cat > ${rootfs_user_file} <<EOF
+tee -1 tee -1 * - /bin/sh - TEE user
+- -1 teeclnt -1 - - - - TEE users group
+EOF
+
 	cd ${shell_folder}/buildroot
 	make clean
 	make a55_defconfig
-	make
+	make BR2_ROOTFS_USERS_TABLES=${rootfs_user_file}
 
 	if [ $? -ne 0 ]; then
 		echo "failed"
@@ -217,6 +252,68 @@ build_rootfs() {
 	echo -e  "rootfs used:${elapsed_time}"
 }
 
+build_mkimage() {
+	echo "Build make image ..."
+	start_time=${SECONDS}
+
+	# Get rootfs and copy to out
+	cd ${shell_folder}/out/rootfs
+	fakeroot cpio -idmv < ${shell_folder}/buildroot/output/images/rootfs.cpio
+
+	# Make dir
+	tee_supplicant_dir=${shell_folder}/out/rootfs/usr/sbin
+	target_ta_dir=${shell_folder}/out/rootfs/lib/optee_armtz
+	if [[ ! -d ${tee_supplicant_dir} ]];then
+		mkdir -p ${tee_supplicant_dir}
+	fi
+
+	if [[ ! -d ${target_ta_dir} ]];then
+		mkdir -p ${target_ta_dir}
+	fi
+
+	# Copy optee clinet
+	cp ${shell_folder}/optee/optee_client/out/export/usr/sbin/tee-supplicant ${tee_supplicant_dir}
+	cp ${shell_folder}/optee/optee_client/out/export/usr/lib/* ${shell_folder}/out/rootfs/usr/lib
+	cp ${shell_folder}/optee/build/br-ext/package/optee_client_ext/S30optee ${shell_folder}/out/rootfs/etc/init.d
+
+	# Copy optee xtest
+	cp ${shell_folder}/optee/optee_test/out/ta/*/*.ta ${target_ta_dir}
+	cp ${shell_folder}/optee/optee_test/out/xtest/xtest ${shell_folder}/out/rootfs/usr/bin
+
+	# Copy optee hello world sample
+	cp ${shell_folder}/optee/optee_examples/hello_world/ta/8aaaf200-2450-11e4-abe2-0002a5d5c51b.ta ${target_ta_dir}
+	cp ${shell_folder}/optee/optee_examples/hello_world/host/optee_example_hello_world ${shell_folder}/out/rootfs/usr/bin
+
+	# Copy images
+	rm -rf ${shell_folder}/out/images/*
+	cp ${shell_folder}/arm-trusted-firmware/build/a55/release/fip.bin ${shell_folder}/out/images
+	cp ${shell_folder}/linux/arch/arm64/boot/Image ${shell_folder}/out/images
+	cp ${shell_folder}/linux/arch/arm64/boot/dts/virtual_platform/a55.dtb ${shell_folder}/out/images
+
+	# Pack rootfs
+	find . | fakeroot cpio -o -H newc > ${shell_folder}/out/images/rootfs.cpio
+
+	if [ $? -ne 0 ]; then
+		echo "failed"
+		exit
+	else
+		echo "succeed"
+	fi
+
+	finish_time=${SECONDS}
+	duration=$((finish_time-start_time))
+	elapsed_time="$((duration / 60))m $((duration % 60))s"
+	echo -e  "rootfs used:${elapsed_time}"
+}
+
+build_prepare() {
+	mkdir -p ${shell_folder}/out/images
+	mkdir -p ${shell_folder}/out/rootfs
+}
+
+# do some prepare
+build_prepare
+
 for arg in $*
 do
 	if [[ $arg  = "h" ]]; then
@@ -229,18 +326,21 @@ do
 		build_optee
 	elif [[ $arg  = "uboot" ]]; then
 		build_u-boot
-	elif [[ $arg  = "linux" ]]; then
-		build_linux
+	elif [[ $arg  = "kernel" ]]; then
+		build_kernel
 	elif [[ $arg  = "rootfs" ]]; then
 		build_rootfs
+	elif [[ $arg  = "mkimage" ]]; then
+		build_mkimage
 	elif [[ $arg  = "all" ]]; then
 		all_start_time=${SECONDS}
 		build_qemu
+		build_rootfs
 		build_optee
 		build_u-boot
 		build_atf
-		build_rootfs
-		build_linux
+		build_mkimage
+		build_kernel
 		all_finish_time=${SECONDS}
 		all_duration=$((all_finish_time-all_start_time))
 		all_elapsed_time="$((all_duration / 60))m $((all_duration % 60))s"
