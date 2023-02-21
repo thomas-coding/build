@@ -3,16 +3,15 @@
 # shell folder
 shell_folder=$(cd "$(dirname "$0")" || exit;pwd)
 
+source ${shell_folder}/config.sh
+
 # For toolchain
 # Baremetal
-export PATH="/home/cn1396/.toolchain/gcc-arm-10.3-2021.07-x86_64-aarch64-none-elf/bin/:$PATH"
+export PATH="${toolchain_bm}/bin/:$PATH"
 # Linux 32
-export PATH="/home/cn1396/.toolchain/gcc-arm-10.3-2021.07-x86_64-arm-none-linux-gnueabihf/bin/:$PATH"
+export PATH="${toolchain_linux_32}/bin/:$PATH"
 # Linux 64
-export PATH="/home/cn1396/.toolchain/arm-gnu-toolchain-12.2.rel1-x86_64-aarch64-none-linux-gnu/bin/:$PATH"
-
-# For mkimage tool make uImage
-export PATH="/root/workspace/code/virtual_platform/u-boot/tools:$PATH"
+export PATH="${toolchain_linux_64}/bin/:$PATH"
 
 # For cross compile
 export ARCH=arm64
@@ -237,7 +236,10 @@ EOF
 	cd ${shell_folder}/buildroot
 	make clean
 	make a55_defconfig
-	make BR2_ROOTFS_USERS_TABLES=${rootfs_user_file}
+	make \
+		BR2_ROOTFS_USERS_TABLES=${rootfs_user_file} \
+		BR2_TOOLCHAIN_EXTERNAL_PATH=${toolchain_linux_64} \
+		BR2_TOOLCHAIN_EXTERNAL_CUSTOM_PREFIX="aarch64-none-linux-gnu"
 
 	if [ $? -ne 0 ]; then
 		echo "failed"
