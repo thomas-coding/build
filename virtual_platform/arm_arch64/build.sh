@@ -349,8 +349,8 @@ do
 		build_optee
 		build_u-boot
 		build_atf
-		build_mkimage
 		build_kernel
+		build_mkimage
 		all_finish_time=${SECONDS}
 		all_duration=$((all_finish_time-all_start_time))
 		all_elapsed_time="$((all_duration / 60))m $((all_duration % 60))s"
