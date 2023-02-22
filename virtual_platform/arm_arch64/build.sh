@@ -291,8 +291,17 @@ build_mkimage() {
 	cp ${shell_folder}/linux/arch/arm64/boot/Image ${shell_folder}/out/images
 	cp ${shell_folder}/linux/arch/arm64/boot/dts/virtual_platform/a55.dtb ${shell_folder}/out/images
 
+	# Install kennel modules
+	cd ${shell_folder}/linux
+	make modules_install INSTALL_MOD_PATH=${shell_folder}/out/rootfs
+
 	# Pack rootfs
+	cd ${shell_folder}/out/rootfs
 	find . | fakeroot cpio -o -H newc > ${shell_folder}/out/images/rootfs.cpio
+
+	# Re-compile kernel for pack new rootfs.cpio
+	cd ${shell_folder}/linux
+	make
 
 	if [ $? -ne 0 ]; then
 		echo "failed"
