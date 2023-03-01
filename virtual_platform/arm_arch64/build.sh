@@ -138,7 +138,9 @@ build_optee() {
 	# build optee clinet
 	cd ${shell_folder}/optee/optee_client
 	rm -rf out
-	make CROSS_COMPILE=aarch64-none-linux-gnu-
+	make \
+		WITH_TEEACL=0 \
+		CROSS_COMPILE=aarch64-none-linux-gnu-
 
 	# build optee example hello_world ta
 	export TA_DEV_KIT_DIR=${shell_folder}/optee/optee_os/build/export-ta_arm64
