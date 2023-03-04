@@ -12,6 +12,7 @@ export PATH="/home/cn1396/.toolchain/gcc-arm-10.3-2021.07-x86_64-aarch64-none-el
 # gdb
 aarch64-none-elf-gdb \
 -ex 'target remote localhost:1234' \
+-ex "set confirm off" \
 -ex "add-symbol-file ${shell_folder}/arm-trusted-firmware/build/a55/release/bl1/bl1.elf" \
 -ex "add-symbol-file ${shell_folder}/arm-trusted-firmware/build/a55/release/bl2/bl2.elf" \
 -ex "add-symbol-file ${shell_folder}/arm-trusted-firmware/build/a55/release/bl31/bl31.elf" \
