@@ -162,6 +162,7 @@ build_optee() {
 		TA_DEV_KIT_DIR=${shell_folder}/optee/optee_os/build/export-ta_arm64 \
 		OPTEE_CLIENT_EXPORT=${shell_folder}/optee/optee_client/out/export/usr \
 		CROSS_COMPILE=${CROSS_COMPILE} \
+		DEBUG=1 \
 		CFG_TEE_TA_LOG_LEVEL=3
 
 	if [ $? -ne 0 ]; then
