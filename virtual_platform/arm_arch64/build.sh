@@ -140,6 +140,7 @@ build_optee() {
 	rm -rf out
 	make \
 		WITH_TEEACL=0 \
+		DEBUG=1 \
 		CROSS_COMPILE=aarch64-none-linux-gnu-
 
 	# build optee example hello_world ta
