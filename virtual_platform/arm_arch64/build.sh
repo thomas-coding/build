@@ -62,6 +62,7 @@ build_atf() {
 	atf_option_secure_boot=0
 	atf_option_secure_boot_encrypt=0
 	atf_option_secure_debug=0
+	atf_option_boot_from_sd=1
 
 	atf_build_opt=
 	atf_build_opt+=" ARCH=aarch64 "
@@ -97,6 +98,10 @@ build_atf() {
 
     if [[ ${atf_option_secure_debug} = 1 ]]; then
         atf_build_opt+=" SECURE_DEBUG=1 "
+    fi
+
+    if [[ ${atf_option_boot_from_sd} = 1 ]]; then
+        atf_build_opt+=" BOOT_FROM_SD=1 "
     fi
 
 	make clean ${atf_build_opt}
@@ -325,6 +330,13 @@ build_prepare() {
 	mkdir -p ${shell_folder}/out/rootfs
 }
 
+build_post() {
+	echo "build post"
+	# burn image to sd card
+	# TODO: FIXME: write sd fail while call from this shell
+	#exec  ${shell_folder}/build_sd.sh
+}
+
 # do some prepare
 build_prepare
 
@@ -366,3 +378,6 @@ do
 		exit
 	fi
 done
+
+# do some post
+build_post
