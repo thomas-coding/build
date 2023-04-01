@@ -266,6 +266,11 @@ build_mkimage() {
 	echo "Build make image ..."
 	start_time=${SECONDS}
 
+	rm -rf ${shell_folder}/out/images
+	rm -rf ${shell_folder}/out/rootfs
+	mkdir -p ${shell_folder}/out/images
+	mkdir -p ${shell_folder}/out/rootfs
+
 	# Get rootfs and copy to out
 	cd ${shell_folder}/out/rootfs
 	fakeroot cpio -idmv < ${shell_folder}/buildroot/output/images/rootfs.cpio
@@ -308,9 +313,9 @@ build_mkimage() {
 	cd ${shell_folder}/out/rootfs
 	find . | fakeroot cpio -o -H newc > ${shell_folder}/out/images/rootfs.cpio
 
-	# Re-compile kernel for pack new rootfs.cpio
-	cd ${shell_folder}/linux
-	make
+	# Re-compile kernel for pack new rootfs.cpio if use initramfs
+	#cd ${shell_folder}/linux
+	#make
 
 	if [ $? -ne 0 ]; then
 		echo "failed"
@@ -326,8 +331,8 @@ build_mkimage() {
 }
 
 build_prepare() {
-	mkdir -p ${shell_folder}/out/images
-	mkdir -p ${shell_folder}/out/rootfs
+	echo "build prepare"
+	mkdir -p ${shell_folder}/out
 }
 
 build_post() {

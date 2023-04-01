@@ -33,7 +33,10 @@ if [[ ${rawblkload} = 1 ]]; then
 fi
 
 # emulate virtual block device
-sudo losetup /dev/loop100 ${sd_name}
+loopdev=`sudo losetup -f`
+echo "loop dev: ${loopdev}"
+
+sudo losetup ${loopdev} ${sd_name}
 #losetup -a
 
 #
@@ -41,7 +44,7 @@ sudo losetup /dev/loop100 ${sd_name}
 # 102400 = 102400 * 512 = 50M
 # p2: offset 500M, size 500M
 
-sudo fdisk /dev/loop100 <<EOF1
+sudo fdisk ${loopdev} <<EOF1
 n
 p
 1
@@ -61,23 +64,34 @@ w
 EOF1
 
 # probe partition, get /dev/loop100p1 and /dev/loop100p2
-sudo partprobe /dev/loop100
+sudo partprobe ${loopdev}
 
 # make file system
-sudo mkfs.vfat -I /dev/loop100p1
-sudo mkfs.ext4 /dev/loop100p2 -F
+sudo mkfs.vfat -I ${loopdev}p1
+sudo mkfs.ext4 ${loopdev}p2 -F
 
 # copy image to sd
 echo "----- copy kernel image and dtb"
 sudo rm -rf ${shell_folder}/tmp
 mkdir ${shell_folder}/tmp
-sudo mount -t vfat /dev/loop100p1 ${shell_folder}/tmp
+sudo mount -t vfat ${loopdev}p1 ${shell_folder}/tmp
 sudo cp -f -r ${shell_folder}/linux/arch/arm64/boot/dts/virtual_platform/a55.dtb ${shell_folder}/tmp
 sudo cp -f -r ${shell_folder}/linux/arch/arm64/boot/Image ${shell_folder}/tmp
+sync
 sleep 1
 sudo umount ${shell_folder}/tmp
 echo "----- install image done"
 
+# copy rootfs
+echo "----- install rootfs"
+sudo mount -t ext4 ${loopdev}p2 ${shell_folder}/tmp
+cd ${shell_folder}/tmp
+sudo cpio -idm < ${shell_folder}/out/images/rootfs.cpio
+sync
+sleep 1
+cd ..
+sudo umount ${shell_folder}/tmp
+echo "----- install rootfs done"
 
 # remove block device
-sudo losetup -d /dev/loop100
+sudo losetup -d ${loopdev}
