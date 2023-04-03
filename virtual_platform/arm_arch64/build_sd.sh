@@ -40,9 +40,10 @@ sudo losetup ${loopdev} ${sd_name}
 #losetup -a
 
 #
-# p1: offset 50M, size 450M
+# p1: offset 50M, size 450M image
 # 102400 = 102400 * 512 = 50M
-# p2: offset 500M, size 500M
+# p2: offset 500M, size 300M rootfs
+# p3: offset 800M, size 200M pstore
 
 sudo fdisk ${loopdev} <<EOF1
 n
@@ -54,6 +55,11 @@ n
 p
 2
 1024000
++300M
+n
+p
+3
+1638400
 
 t
 1
