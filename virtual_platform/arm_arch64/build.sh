@@ -63,6 +63,7 @@ build_atf() {
 	atf_option_secure_boot_encrypt=0
 	atf_option_secure_debug=0
 	atf_option_boot_from_sd=1
+	atf_option_bl2_at_el3=0
 
 	atf_build_opt=
 	atf_build_opt+=" ARCH=aarch64 "
@@ -102,6 +103,10 @@ build_atf() {
 
     if [[ ${atf_option_boot_from_sd} = 1 ]]; then
         atf_build_opt+=" BOOT_FROM_SD=1 "
+    fi
+
+    if [[ ${atf_option_bl2_at_el3} = 1 ]]; then
+        atf_build_opt+=" BL2_AT_EL3=1 "
     fi
 
 	make clean ${atf_build_opt}
