@@ -267,6 +267,26 @@ EOF
 	echo -e  "rootfs used:${elapsed_time}"
 }
 
+build_user() {
+	echo "Build userspace binary ..."
+	start_time=${SECONDS}
+
+	cd ${shell_folder}/linux/samples/userspace_test/
+	source build.sh
+
+	if [ $? -ne 0 ]; then
+		echo "failed"
+		exit
+	else
+		echo "succeed"
+	fi
+
+	finish_time=${SECONDS}
+	duration=$((finish_time-start_time))
+	elapsed_time="$((duration / 60))m $((duration % 60))s"
+	echo -e  "userspace binary used:${elapsed_time}"
+}
+
 build_mkimage() {
 	echo "Build make image ..."
 	start_time=${SECONDS}
@@ -303,6 +323,9 @@ build_mkimage() {
 	# Copy optee hello world sample
 	cp ${shell_folder}/optee/optee_examples/hello_world/ta/8aaaf200-2450-11e4-abe2-0002a5d5c51b.ta ${target_ta_dir}
 	cp ${shell_folder}/optee/optee_examples/hello_world/host/optee_example_hello_world ${shell_folder}/out/rootfs/usr/bin
+
+	# Copy userspace binary
+	cp ${shell_folder}/linux/samples/userspace_test/out/* ${shell_folder}/out/rootfs/usr/bin
 
 	# Copy images
 	rm -rf ${shell_folder}/out/images/*
@@ -368,6 +391,8 @@ do
 		build_rootfs
 	elif [[ $arg  = "mkimage" ]]; then
 		build_mkimage
+	elif [[ $arg  = "user" ]]; then
+		build_user
 	elif [[ $arg  = "all" ]]; then
 		all_start_time=${SECONDS}
 		build_qemu
