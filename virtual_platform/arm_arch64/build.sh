@@ -165,8 +165,21 @@ build_optee() {
 		TEEC_EXPORT=${shell_folder}/optee/optee_client/out/export/usr \
 		--no-builtin-variables
 
+	# build optee example secure_storage ta
+	export TA_DEV_KIT_DIR=${shell_folder}/optee/optee_os/build/export-ta_arm64
+	cd ${shell_folder}/optee/optee_examples/secure_storage/ta
+	make CROSS_COMPILE=aarch64-none-linux-gnu-
+
+	# build optee example secure_storage ca
+	cd ${shell_folder}/optee/optee_examples/secure_storage/host
+	make \
+		CROSS_COMPILE=aarch64-none-linux-gnu- \
+		TEEC_EXPORT=${shell_folder}/optee/optee_client/out/export/usr \
+		--no-builtin-variables
+
 	# build optee xtest
 	cd ${shell_folder}/optee/optee_test
+	rm -rf ${shell_folder}/optee/optee_test/out
 	make \
 		CROSS_COMPILE=aarch64-none-linux-gnu- \
 		TA_DEV_KIT_DIR=${shell_folder}/optee/optee_os/build/export-ta_arm64 \
@@ -323,6 +336,10 @@ build_mkimage() {
 	# Copy optee hello world sample
 	cp ${shell_folder}/optee/optee_examples/hello_world/ta/8aaaf200-2450-11e4-abe2-0002a5d5c51b.ta ${target_ta_dir}
 	cp ${shell_folder}/optee/optee_examples/hello_world/host/optee_example_hello_world ${shell_folder}/out/rootfs/usr/bin
+
+	# Copy optee secure storage sample
+	cp ${shell_folder}/optee/optee_examples/secure_storage/ta/f4e750bb-1437-4fbf-8785-8d3580c34994.ta ${target_ta_dir}
+	cp ${shell_folder}/optee/optee_examples/secure_storage/host/optee_example_secure_storage ${shell_folder}/out/rootfs/usr/bin
 
 	# Copy userspace binary
 	cp ${shell_folder}/linux/samples/userspace_test/out/* ${shell_folder}/out/rootfs/usr/bin
