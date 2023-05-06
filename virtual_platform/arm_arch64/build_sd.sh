@@ -6,12 +6,17 @@ shell_folder=$(cd "$(dirname "$0")" || exit;pwd)
 rawblkload=0
 
 sd_name=sd.disk
+virtio_name=virtio.disk
 
 echo "shell_folder:${shell_folder}"
 
-# Create 32M sd card
+# Create 1G sd card
 rm -f ${shell_folder}/${sd_name}
 dd if=/dev/zero of=${shell_folder}/sd.disk bs=1M count=1024
+
+# Create 16M sd card for virtio block device
+rm -f ${shell_folder}/${virtio_name}
+dd if=/dev/zero of=${shell_folder}/${virtio_name} bs=1M count=16
 
 # Burn fip.bin to sd card, offset 20K
 dd if=${shell_folder}/arm-trusted-firmware/build/a55/release/fip.bin of=sd.disk conv=fsync,notrunc bs=512 seek=40
