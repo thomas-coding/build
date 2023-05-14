@@ -8,6 +8,9 @@ export PATH="/root/workspace/software/qemu/qemu-6.0.0/build/:$PATH"
 # boot source
 boot_from_sd=1
 
+# support display
+display_enable=0
+
 qemu_option=
 if [[ $1  = "--gdb" ]]; then
     qemu_option+=" -s -S"
@@ -22,10 +25,20 @@ qemu_option+=" -device loader,file=${shell_folder}/buildroot/output/images/rootf
 #qemu_option+=" -d guest_errors"
 qemu_option+=" -drive file=${shell_folder}/virtio.disk,format=raw,id=virtio_blk"
 qemu_option+=" -device virtio-blk-device,drive=virtio_blk"
-qemu_option+=" -nographic"
+qemu_option+=" -global virtio-mmio.force-legacy=false"
 #qemu_option+=" -netdev user,net=192.168.31.0/24,host=192.168.31.2,hostname=qemu,dns=192.168.31.56,dhcpstart=192.168.31.100,hostfwd=tcp::3522-:22,hostfwd=tcp::3580-:80,id=net0"
 
 qemu_option+=" -smp 2"
+
+if [[ ${display_enable} = 1 ]]; then
+    qemu_option+=" -device virtio-gpu-device"
+    # Connect from vnc for display: 10.10.13.190:5902
+    qemu_option+=" -vnc :2"
+    # connect like: telnet localhost 3441
+    qemu_option+=" --serial telnet:127.0.0.1:3441,server,nowait"
+else
+    qemu_option+=" -nographic"
+fi
 
 if [[ ${boot_from_sd} = 1 ]]; then
     qemu_option+=" -drive if=sd,file=${shell_folder}/sd.disk,format=raw"

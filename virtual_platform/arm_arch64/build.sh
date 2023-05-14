@@ -19,14 +19,15 @@ export CROSS_COMPILE=aarch64-none-linux-gnu-
 
 cmd_help() {
 	echo "Basic mode:"
-	echo "$0 h			---> Command help"
-	echo "$0 qemu		---> Build qemu"
-	echo "$0 u-boot		---> Build u-boot"
-	echo "$0 kernel		---> Build linux kernel"
-	echo "$0 atf		---> Build arm trusted firmware "
-	echo "$0 rootfs		---> Build rootfs "
-	echo "$0 mkimage	---> Copy thing to rootfs and pack. Copy images"
-	echo "$0 all		---> Build all "
+	echo "$0 h          ---> Command help"
+	echo "$0 qemu       ---> Build qemu"
+	echo "$0 u-boot     ---> Build u-boot"
+	echo "$0 kernel     ---> Build linux kernel"
+	echo "$0 atf        ---> Build arm trusted firmware "
+	echo "$0 rootfs     ---> Build rootfs "
+	echo "$0 mkimage    ---> Copy thing to rootfs and pack. Copy images"
+	echo "$0 sd         ---> Burn to sd card"
+	echo "$0 all        ---> Build all "
 }
 
 build_qemu() {
@@ -35,7 +36,7 @@ build_qemu() {
 
 	cd ${shell_folder}/qemu
 	./configure --target-list=aarch64-softmmu --enable-debug
-	make -j8
+	make -j8 || exit
 
 	if [ $? -ne 0 ]; then
 		echo "failed"
@@ -109,7 +110,7 @@ build_atf() {
         atf_build_opt+=" BL2_AT_EL3=1 "
     fi
 
-	make clean ${atf_build_opt}
+	make clean ${atf_build_opt} || exit
 
 	if [ $? -ne 0 ]; then
 		echo "failed"
@@ -143,7 +144,7 @@ build_optee() {
 		DEBUG=1 \
 		O=build \
 		PLATFORM=virtual_platform \
-		PLATFORM_FLAVOR=a55
+		PLATFORM_FLAVOR=a55 || exit
 
 	# build optee clinet
 	cd ${shell_folder}/optee/optee_client
@@ -151,31 +152,31 @@ build_optee() {
 	make \
 		WITH_TEEACL=0 \
 		DEBUG=1 \
-		CROSS_COMPILE=aarch64-none-linux-gnu-
+		CROSS_COMPILE=aarch64-none-linux-gnu- || exit
 
 	# build optee example hello_world ta
 	export TA_DEV_KIT_DIR=${shell_folder}/optee/optee_os/build/export-ta_arm64
 	cd ${shell_folder}/optee/optee_examples/hello_world/ta
-	make CROSS_COMPILE=aarch64-none-linux-gnu-
+	make CROSS_COMPILE=aarch64-none-linux-gnu- || exit
 
 	# build optee example hello_world ca
 	cd ${shell_folder}/optee/optee_examples/hello_world/host
 	make \
 		CROSS_COMPILE=aarch64-none-linux-gnu- \
 		TEEC_EXPORT=${shell_folder}/optee/optee_client/out/export/usr \
-		--no-builtin-variables
+		--no-builtin-variables || exit
 
 	# build optee example secure_storage ta
 	export TA_DEV_KIT_DIR=${shell_folder}/optee/optee_os/build/export-ta_arm64
 	cd ${shell_folder}/optee/optee_examples/secure_storage/ta
-	make CROSS_COMPILE=aarch64-none-linux-gnu-
+	make CROSS_COMPILE=aarch64-none-linux-gnu- || exit
 
 	# build optee example secure_storage ca
 	cd ${shell_folder}/optee/optee_examples/secure_storage/host
 	make \
 		CROSS_COMPILE=aarch64-none-linux-gnu- \
 		TEEC_EXPORT=${shell_folder}/optee/optee_client/out/export/usr \
-		--no-builtin-variables
+		--no-builtin-variables || exit
 
 	# build optee xtest
 	cd ${shell_folder}/optee/optee_test
@@ -186,7 +187,7 @@ build_optee() {
 		OPTEE_CLIENT_EXPORT=${shell_folder}/optee/optee_client/out/export/usr \
 		CROSS_COMPILE=${CROSS_COMPILE} \
 		DEBUG=1 \
-		CFG_TEE_TA_LOG_LEVEL=3
+		CFG_TEE_TA_LOG_LEVEL=3 || exit
 
 	if [ $? -ne 0 ]; then
 		echo "failed"
@@ -207,8 +208,8 @@ build_u-boot() {
 
 	cd ${shell_folder}/u-boot
 	make clean
-	make a55_defconfig
-	make
+	make a55_defconfig  || exit
+	make  || exit
 
 	if [ $? -ne 0 ]; then
 		echo "failed"
@@ -230,8 +231,8 @@ build_kernel() {
 	echo "Build kernel ..."
 	start_time=${SECONDS}
 	cd ${shell_folder}/linux
-	make a55_defconfig
-	make -j8
+	make a55_defconfig || exit
+	make -j8 || exit
 
 	if [ $? -ne 0 ]; then
 		echo "failed"
@@ -262,10 +263,10 @@ EOF
 
 	cd ${shell_folder}/buildroot
 	make clean
-	make a55_defconfig
+	make a55_defconfig || exit
 	make \
 		BR2_ROOTFS_USERS_TABLES=${rootfs_user_file} \
-		BR2_TOOLCHAIN_EXTERNAL_PATH=${toolchain_linux_64}
+		BR2_TOOLCHAIN_EXTERNAL_PATH=${toolchain_linux_64} || exit
 
 	if [ $? -ne 0 ]; then
 		echo "failed"
@@ -382,9 +383,6 @@ build_prepare() {
 
 build_post() {
 	echo "build post"
-	# burn image to sd card
-	# TODO: FIXME: write sd fail while call from this shell
-	#exec  ${shell_folder}/build_sd.sh
 }
 
 # do some prepare
@@ -410,6 +408,9 @@ do
 		build_mkimage
 	elif [[ $arg  = "user" ]]; then
 		build_user
+	elif [[ $arg  = "sd" ]]; then
+		cd ${shell_folder}
+		source ${shell_folder}/build_sd.sh
 	elif [[ $arg  = "all" ]]; then
 		all_start_time=${SECONDS}
 		build_qemu
