@@ -26,6 +26,9 @@ qemu_option+=" -device loader,file=${shell_folder}/buildroot/output/images/rootf
 qemu_option+=" -drive file=${shell_folder}/virtio.disk,format=raw,id=virtio_blk"
 qemu_option+=" -device virtio-blk-device,drive=virtio_blk"
 qemu_option+=" -global virtio-mmio.force-legacy=false"
+
+qemu_option+=" -netdev user,id=net0,net=192.168.31.0/24,dhcpstart=192.168.31.100,hostfwd=tcp::3522-:22,hostfwd=tcp::3580-:80"
+qemu_option+=" -device virtio-net-device,netdev=net0"
 #qemu_option+=" -netdev user,net=192.168.31.0/24,host=192.168.31.2,hostname=qemu,dns=192.168.31.56,dhcpstart=192.168.31.100,hostfwd=tcp::3522-:22,hostfwd=tcp::3580-:80,id=net0"
 
 qemu_option+=" -smp 2"
