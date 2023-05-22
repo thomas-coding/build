@@ -27,7 +27,16 @@ qemu_option+=" -drive file=${shell_folder}/virtio.disk,format=raw,id=virtio_blk"
 qemu_option+=" -device virtio-blk-device,drive=virtio_blk"
 qemu_option+=" -global virtio-mmio.force-legacy=false"
 
-qemu_option+=" -netdev user,id=net0,net=192.168.31.0/24,dhcpstart=192.168.31.100,hostfwd=tcp::3522-:22,hostfwd=tcp::3580-:80"
+# Virtual gateway
+qemu_option+=" -netdev user,id=net0,\
+net=192.168.31.0/24,\
+host=192.168.31.254,\
+dns=192.168.31.250,\
+dhcpstart=192.168.31.100,\
+hostfwd=tcp:127.0.0.1:3522-192.168.31.100:22,\
+hostfwd=tcp:127.0.0.1:3580-192.168.31.100:80"
+
+# Guest virtual net card
 qemu_option+=" -device virtio-net-device,netdev=net0"
 #qemu_option+=" -netdev user,net=192.168.31.0/24,host=192.168.31.2,hostname=qemu,dns=192.168.31.56,dhcpstart=192.168.31.100,hostfwd=tcp::3522-:22,hostfwd=tcp::3580-:80,id=net0"
 
