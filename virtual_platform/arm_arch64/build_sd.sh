@@ -4,15 +4,16 @@
 shell_folder=$(cd "$(dirname "$0")" || exit;pwd)
 
 rawblkload=0
+ubuntu=0
 
 sd_name=sd.disk
 virtio_name=virtio.disk
 
 echo "shell_folder:${shell_folder}"
 
-# Create 1G sd card
+# Create 2G sd card
 rm -f ${shell_folder}/${sd_name}
-dd if=/dev/zero of=${shell_folder}/sd.disk bs=1M count=1024
+dd if=/dev/zero of=${shell_folder}/sd.disk bs=1M count=2048
 
 # Create 16M sd card for virtio block device
 rm -f ${shell_folder}/${virtio_name}
@@ -37,18 +38,27 @@ if [[ ${rawblkload} = 1 ]]; then
     exit
 fi
 
+if [[ ${ubuntu} = 1 ]]; then
+	if [[ ! -d ${shell_folder}/out/ubuntu ]];then
+		mkdir -p ${shell_folder}/out/ubuntu
+        cd ${shell_folder}/out/ubuntu
+        wget http://192.168.103.66/share/ubuntu/ubuntu20.04.5_20230527.tar.gz
+        tar -zxf ubuntu20.04.5_20230527.tar.gz
+	fi
+fi
+
 # emulate virtual block device
 loopdev=`sudo losetup -f`
 echo "loop dev: ${loopdev}"
 
-sudo losetup ${loopdev} ${sd_name}
+sudo losetup ${loopdev} ${shell_folder}/${sd_name}
 #losetup -a
 
 #
 # p1: offset 50M, size 450M image
 # 102400 = 102400 * 512 = 50M
-# p2: offset 500M, size 300M rootfs
-# p3: offset 800M, size 200M pstore
+# p2: offset 500M, size 1500M rootfs
+# p3: offset 2000M, size 48M pstore
 
 sudo fdisk ${loopdev} <<EOF1
 n
@@ -60,11 +70,11 @@ n
 p
 2
 1024000
-+300M
++1500M
 n
 p
 3
-1638400
+4096000
 
 t
 1
@@ -97,7 +107,11 @@ echo "----- install image done"
 echo "----- install rootfs"
 sudo mount -t ext4 ${loopdev}p2 ${shell_folder}/tmp
 cd ${shell_folder}/tmp
+if [[ ${ubuntu} = 1 ]]; then
+	sudo cp -rf ${shell_folder}/out/ubuntu/ubuntu20.04.5/* ./
+else
 sudo cpio -idm < ${shell_folder}/out/images/rootfs.cpio
+fi
 sync
 sleep 1
 cd ..
