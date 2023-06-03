@@ -467,7 +467,11 @@ do
 	elif [[ $arg  = "all" ]]; then
 		all_start_time=${SECONDS}
 		build_qemu
-		build_rootfs
+		if [[ ${busybox} = 1 ]]; then
+			build_busybox
+		else
+			build_rootfs
+		fi
 		build_optee
 		build_u-boot
 		build_atf
