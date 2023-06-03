@@ -312,7 +312,11 @@ build_mkimage() {
 
 	# Get rootfs and copy to out
 	cd ${shell_folder}/out/rootfs
-	fakeroot cpio -idmv < ${shell_folder}/buildroot/output/images/rootfs.cpio
+	if [[ ${busybox} = 1 ]]; then
+		fakeroot cpio -idmv < ${shell_folder}/busybox/rootfs.cpio
+	else
+		fakeroot cpio -idmv < ${shell_folder}/buildroot/output/images/rootfs.cpio
+	fi
 
 	# Make dir
 	tee_supplicant_dir=${shell_folder}/out/rootfs/usr/sbin
@@ -376,6 +380,53 @@ build_mkimage() {
 	echo -e  "rootfs used:${elapsed_time}"
 }
 
+build_busybox() {
+	echo "Build rootfs busybox"
+	# Build busybox
+	cd ${shell_folder}/busybox
+	#make menuconfig # NOTE: only need run first time, config setting -> build -> static lib and enable debug
+	make  || exit
+	make install
+
+	# Copy busybox to rootfs
+	cd ${shell_folder}
+	rm -rf ${shell_folder}/busybox/rootfs
+	mkdir -p ${shell_folder}/busybox/rootfs
+	cp -r ${shell_folder}/busybox/_install/* ${shell_folder}/busybox/rootfs/
+
+	# Copy toolchain lib to rootfs
+	mkdir -p ${shell_folder}/rootfs/lib
+	cp -r /home/cn1396/.toolchain/arm-gnu-toolchain-12.2.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/lib/* ${shell_folder}/busybox/rootfs/lib
+
+	# Make dev dir, now used busybox mkdevs.sh to create dev dir
+	mkdir -p ${shell_folder}/busybox/rootfs/dev
+	cd ${shell_folder}/busybox/rootfs/dev
+	sudo ${shell_folder}/busybox/examples/bootfloppy/mkdevs.sh ${shell_folder}/busybox/rootfs/dev
+#	mknod -m 666 tty1 c 4 1
+#	mknod -m 666 tty2 c 4 2
+#	mknod -m 666 tty3 c 4 3
+#	mknod -m 666 tty4 c 4 4
+#	mknod -m 666 console c 5 1
+#	mknod -m 666 null c 1 3
+
+	# Make other dir
+	mkdir -p ${shell_folder}/busybox/rootfs/sys
+	mkdir -p ${shell_folder}/busybox/rootfs/proc
+	mkdir -p ${shell_folder}/busybox/rootfs/mnt
+	mkdir -p ${shell_folder}/busybox/rootfs/initrd
+	mkdir -p ${shell_folder}/busybox/rootfs/usr/lib
+	mkdir -p ${shell_folder}/busybox/rootfs/usr/bin
+
+	# copy etc
+	cp -r ${shell_folder}/busybox/examples/bootfloppy/etc ${shell_folder}/busybox/rootfs/
+	ln -s /proc/mounts ${shell_folder}/busybox/rootfs/etc/mtab
+
+	# Pack rootfs
+	rm -rf ${shell_folder}/busybox/rootfs.cpio
+	cd ${shell_folder}/busybox/rootfs
+	find . | fakeroot cpio -o -H newc > ${shell_folder}/busybox/rootfs.cpio
+}
+
 build_prepare() {
 	echo "build prepare"
 	mkdir -p ${shell_folder}/out
@@ -408,6 +459,8 @@ do
 		build_mkimage
 	elif [[ $arg  = "user" ]]; then
 		build_user
+	elif [[ $arg  = "busybox" ]]; then
+		build_busybox
 	elif [[ $arg  = "sd" ]]; then
 		cd ${shell_folder}
 		source ${shell_folder}/build_sd.sh
@@ -420,6 +473,9 @@ do
 		build_atf
 		build_kernel
 		build_mkimage
+		build_user
+		cd ${shell_folder}
+		source ${shell_folder}/build_sd.sh
 		all_finish_time=${SECONDS}
 		all_duration=$((all_finish_time-all_start_time))
 		all_elapsed_time="$((all_duration / 60))m $((all_duration % 60))s"
