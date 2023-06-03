@@ -384,7 +384,7 @@ build_busybox() {
 	echo "Build rootfs busybox"
 	# Build busybox
 	cd ${shell_folder}/busybox
-	#make menuconfig # NOTE: only need run first time, config setting -> build -> static lib and enable debug
+	make menuconfig # NOTE: only need run first time, config setting -> build -> static lib and enable debug
 	make  || exit
 	make install
 
