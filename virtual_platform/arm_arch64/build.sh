@@ -382,10 +382,13 @@ build_mkimage() {
 
 build_busybox() {
 	echo "Build rootfs busybox"
+	start_time=${SECONDS}
+
 	# Build busybox
 	cd ${shell_folder}/busybox
-	make menuconfig # NOTE: only need run first time, config setting -> build -> static lib and enable debug
-	make  || exit
+	#make menuconfig # NOTE: only need run first time, config setting -> build -> static lib and enable debug
+	make a55_defconfig || exit
+	LDFLAGS="--static" make -j 4 || exit
 	make install
 
 	# Copy busybox to rootfs
@@ -425,6 +428,21 @@ build_busybox() {
 	rm -rf ${shell_folder}/busybox/rootfs.cpio
 	cd ${shell_folder}/busybox/rootfs
 	find . | fakeroot cpio -o -H newc > ${shell_folder}/busybox/rootfs.cpio
+
+	rm -rf ${shell_folder}/busybox/busybox.asm
+	${CROSS_COMPILE}objdump -xd ${shell_folder}/busybox/busybox_unstripped > ${shell_folder}/busybox/busybox.asm
+
+	if [ $? -ne 0 ]; then
+		echo "failed"
+		exit
+	else
+		echo "succeed"
+	fi
+
+	finish_time=${SECONDS}
+	duration=$((finish_time-start_time))
+	elapsed_time="$((duration / 60))m $((duration % 60))s"
+	echo -e  "busybox used:${elapsed_time}"
 }
 
 build_prepare() {
