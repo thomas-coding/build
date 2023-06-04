@@ -391,43 +391,7 @@ build_busybox() {
 	LDFLAGS="--static" make -j 4 || exit
 	make install
 
-	# Copy busybox to rootfs
-	cd ${shell_folder}
-	rm -rf ${shell_folder}/busybox/rootfs
-	mkdir -p ${shell_folder}/busybox/rootfs
-	cp -r ${shell_folder}/busybox/_install/* ${shell_folder}/busybox/rootfs/
-
-	# Copy toolchain lib to rootfs
-	mkdir -p ${shell_folder}/rootfs/lib
-	cp -r /home/cn1396/.toolchain/arm-gnu-toolchain-12.2.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/lib/* ${shell_folder}/busybox/rootfs/lib
-
-	# Make dev dir, now used busybox mkdevs.sh to create dev dir
-	mkdir -p ${shell_folder}/busybox/rootfs/dev
-	cd ${shell_folder}/busybox/rootfs/dev
-	sudo ${shell_folder}/busybox/examples/bootfloppy/mkdevs.sh ${shell_folder}/busybox/rootfs/dev
-#	mknod -m 666 tty1 c 4 1
-#	mknod -m 666 tty2 c 4 2
-#	mknod -m 666 tty3 c 4 3
-#	mknod -m 666 tty4 c 4 4
-#	mknod -m 666 console c 5 1
-#	mknod -m 666 null c 1 3
-
-	# Make other dir
-	mkdir -p ${shell_folder}/busybox/rootfs/sys
-	mkdir -p ${shell_folder}/busybox/rootfs/proc
-	mkdir -p ${shell_folder}/busybox/rootfs/mnt
-	mkdir -p ${shell_folder}/busybox/rootfs/initrd
-	mkdir -p ${shell_folder}/busybox/rootfs/usr/lib
-	mkdir -p ${shell_folder}/busybox/rootfs/usr/bin
-
-	# copy etc
-	cp -r ${shell_folder}/busybox/examples/bootfloppy/etc ${shell_folder}/busybox/rootfs/
-	ln -s /proc/mounts ${shell_folder}/busybox/rootfs/etc/mtab
-
-	# Pack rootfs
-	rm -rf ${shell_folder}/busybox/rootfs.cpio
-	cd ${shell_folder}/busybox/rootfs
-	find . | fakeroot cpio -o -H newc > ${shell_folder}/busybox/rootfs.cpio
+	${shell_folder}/busybox/examples/a55/mkrootfs.sh
 
 	rm -rf ${shell_folder}/busybox/busybox.asm
 	${CROSS_COMPILE}objdump -xd ${shell_folder}/busybox/busybox_unstripped > ${shell_folder}/busybox/busybox.asm
