@@ -1,0 +1,14 @@
+diff --git a/Makefile b/Makefile
+index b7a50eed2..30ba8a6b7 100644
+--- a/Makefile
++++ b/Makefile
+@@ -322,6 +322,9 @@ ifneq (${DEBUG}, 0)
+         LOG_LEVEL	:=	40
+ else
+         BUILD_TYPE	:=	release
++        TF_CFLAGS	+=	-g -gdwarf-4
++        ASFLAGS		+=	-g -Wa,-gdwarf-4
++
+         # Use LOG_LEVEL_NOTICE by default for release builds
+         LOG_LEVEL	:=	20
+ endif

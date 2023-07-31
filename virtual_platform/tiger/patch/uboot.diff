@@ -1,0 +1,10 @@
+diff --git a/configs/horizon_x5_defconfig b/configs/horizon_x5_defconfig
+index 03dd5e41cd..573d833025 100644
+--- a/configs/horizon_x5_defconfig
++++ b/configs/horizon_x5_defconfig
+@@ -73,4 +73,5 @@ CONFIG_USB_ETHER_RTL8152=y
+ CONFIG_USB_GADGET=y
+ CONFIG_USB_GADGET_DOWNLOAD=y
+ CONFIG_DESIGNWARE_WATCHDOG=y
++CONFIG_SYS_BOOTM_LEN=0x8000000
+ CONFIG_WDT=y

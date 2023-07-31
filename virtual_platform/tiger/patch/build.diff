@@ -1,0 +1,13 @@
+diff --git a/platform/x5/config b/platform/x5/config
+index 28bdf9c..b04b8ad 100755
+--- a/platform/x5/config
++++ b/platform/x5/config
+@@ -86,7 +86,7 @@ export -f get_atf_build_opt
+ 
+ # kernel
+ export kernel_home=${base_home}/kernel
+-export kernel_config=horizon_x5_defconfig
++export kernel_config=horizon_x5_mini_defconfig
+ export kernel_src_dtb=horizon/x5-fpga.dtb
+ export kernel_dst_dtb=x5.dtb
+ export kernel_image=Image

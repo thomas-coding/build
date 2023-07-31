@@ -1,0 +1,17 @@
+
+
+1. patch to target project
+./prepare x5_0731
+
+2. build qemu in target project
+./build_qemu.sh
+
+3. run qemu
+./runqemu.sh
+
+In BL1 console, enter
+"exit"
+
+In uboot console, enter
+"bootm 0x82000000"
+address refer to x5.itb in memory 

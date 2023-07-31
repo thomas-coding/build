@@ -10,6 +10,7 @@ export PATH="/home/cn1396/.toolchain/gcc-arm-10.3-2021.07-x86_64-aarch64-none-el
 #-ex "add-symbol-file ${shell_folder}/ramfs/image/init"
 #-ex "add-symbol-file ${shell_folder}/optee/optee_test/out/xtest/xtest"
 #-ex "add-symbol-file ${shell_folder}/baremetal/a55/output/a55.elf"
+#-ex "add-symbol-file ${shell_folder}/out/x5/intermediate/uboot/u-boot 0xfff3a000"
 
 # gdb
 aarch64-none-elf-gdb \
@@ -20,4 +21,3 @@ aarch64-none-elf-gdb \
 -ex "add-symbol-file ${shell_folder}/out/x5/intermediate/atf/horizon/release/bl31/bl31.elf" \
 -ex "add-symbol-file ${shell_folder}/out/x5/intermediate/kernel/vmlinux" \
 -q
- 

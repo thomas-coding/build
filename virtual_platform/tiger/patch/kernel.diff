@@ -1,0 +1,22 @@
+diff --git a/arch/arm64/configs/horizon_x5_mini_defconfig b/arch/arm64/configs/horizon_x5_mini_defconfig
+index 07b42003272f..8d4f55b35e6c 100644
+--- a/arch/arm64/configs/horizon_x5_mini_defconfig
++++ b/arch/arm64/configs/horizon_x5_mini_defconfig
+@@ -113,3 +113,6 @@ CONFIG_DEBUG_KERNEL=y
+ # CONFIG_DEBUG_PREEMPT is not set
+ # CONFIG_FTRACE is not set
+ CONFIG_MEMTEST=y
++
++# For memory boot
++CONFIG_INITRAMFS_SOURCE="../out/x5/images/rootfs.cpio.gz"
+diff --git a/drivers/soc/horizon/Makefile b/drivers/soc/horizon/Makefile
+index a2c7ff3ba4e8..d025b6189cde 100644
+--- a/drivers/soc/horizon/Makefile
++++ b/drivers/soc/horizon/Makefile
+@@ -1,5 +1,5 @@
+ # SPDX-License-Identifier: GPL-2.0
+ obj-${CONFIG_DSU_CTRL} += dsu_ctrl.o
+ obj-${CONFIG_AXI_MONITOR} += axi_mon.o
+-obj-y += arteris.o
++#obj-y += arteris.o
+ obj-y += ddr_dvfs.o
