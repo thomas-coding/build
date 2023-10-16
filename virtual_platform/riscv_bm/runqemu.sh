@@ -16,7 +16,7 @@ else
     echo "not use gdb, just run"
 fi
 
-qemu_option+=" -machine virt -bios none -monitor null -semihosting"
+qemu_option+=" -machine thomas-riscv32 -bios none -monitor null -semihosting"
 qemu_option+=" --semihosting-config enable=on,target=native"
 qemu_option+=" -kernel ${shell_folder}/${bm_dir}/output/target.elf"
 qemu_option+=" -serial stdio -nographic"
