@@ -3,7 +3,7 @@
 # Shell folder
 shell_folder=$(cd "$(dirname "$0")" || exit;pwd)
 
-bm_dir=baremetal/baremetal-riscv64
+bm_dir=baremetal/qemu-bm-thomas-riscv64
 
 qemu_option=
 if [[ $1  = "--gdb" ]]; then

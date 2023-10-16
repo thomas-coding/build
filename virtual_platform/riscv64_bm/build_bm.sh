@@ -4,7 +4,7 @@
 shell_folder=$(cd "$(dirname "$0")" || exit;pwd)
 
 export PATH="/home/cn1396/.toolchain/riscv/riscv64-elf-ubuntu-20.04-gcc-nightly-2023.10.12-nightly/bin:$PATH"
-bm_dir=baremetal/baremetal-riscv64
+bm_dir=baremetal/qemu-bm-thomas-riscv64
 
 cmd_help() {
 	echo "Basic mode:"
