@@ -1,0 +1,80 @@
+#!/bin/bash
+#
+# Copyright (c) 2024, Thomas
+#
+
+export modules="qemu opensbi uboot buildroot kernel mkimage burn"
+
+# common configuration
+export arch=riscv
+export cross_compile=riscv64-unknown-linux-gnu-
+export toolchain=riscv64-glibc-ubuntu-20.04-gcc-nightly-2024.04.12-nightly
+
+# opensbi
+export opensbi_home=${base_home}/opensbi
+export opensbi_platform=generic
+export opensbi_riscv_xlen=64
+export opensbi_build_info=1
+export opensbi_fw_text_start=0x20040000
+export opensbi_fw_jump_addr=0x50000000
+
+# qemu
+export qemu_home=${base_home}/qemu
+export qemu_config_option=" --enable-debug --disable-werror"
+export qemu_target=riscv64-softmmu
+#export qemu_no_reconfig=1
+export qemu_binary=qemu/build/qemu-system-riscv64
+
+# uboot
+export uboot_home=${base_home}/u-boot
+export uboot_config=thomas_riscv64_defconfig
+export uboot_spl=u-boot-spl.bin
+export uboot_fit=y
+export uboot_fit_kernel_image=Image
+export uboot_fit_its=thomas_riscv64.its
+export uboot_fit_its_dir=${uboot_home}/board/thomas/riscv64
+export uboot_fit_itb=thomas_riscv64.itb
+
+# kernel
+export kernel_home=${base_home}/linux
+export kernel_config=thomas_riscv64_defconfig
+export kernel_src_dtb=thomas_riscv64/thomas_riscv64.dtb
+export kernel_dst_dtb=thomas_riscv64.dtb
+export kernel_image=Image
+export kernel_initramfs=n
+
+# buildroot
+export buildroot_home=${base_home}/buildroot
+export buildroot_config=thomas_riscv64_defconfig
+
+# mkimage
+export mkimage_home=${out}
+export mkimage_boot_type=uboot_itb
+export mkimage_spl_max_size=98304
+export mkimage_boot_type=uboot_itb
+
+# burn
+export burn_script=burn_sd_image.sh
+export burn_image_type=sd
+export burn_image_offset=64
+export burn_qemu_script=run_qemu.sh
+export burn_qemu_binary=qemu-system-riscv64
+export burn_qemu_opt=" \
+-machine thomas-riscv64 \
+-kernel u-boot-spl \
+-device loader,file=u-boot.itb,addr=0x41000000 \
+-device loader,file=thomas_riscv64.itb,addr=0x42000000 \
+-nographic \
+-smp 1"
+#export burn_gdb_script=run_gdb.sh
+export burn_gdb_binary=riscv64-unknown-linux-gnu-gdb
+export burn_gdb_opt=" \
+-ex 'target remote localhost:1234' \
+-ex 'add-symbol-file u-boot-spl' \
+-ex 'add-symbol-file fw_jump.elf' \
+-q"
+#export burn_dump_script=run_dump.sh
+export burn_dump_binary=riscv64-unknown-linux-gnu-objdump
+export burn_dump_opt=" \
+-xD fw_jump.elf > opensbi_elf.asm \
+"

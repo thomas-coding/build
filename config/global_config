@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# Copyright (c) 2024, Thomas
+#
+
+
+export build_home=$(pwd)
+export build_directory=$(basename "$(pwd)")
+export base_home=$(dirname "$(pwd)")
+export build_jobs=$(grep < /proc/cpuinfo -c processor -)
+
+. config/utility_config
+
+export DEFAULT_PATH=${HOME}/.local/bin:$PATH
+export PATH=${DEFAULT_PATH}

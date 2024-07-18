@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# Copyright (c) 2024, Thomas
+#
+
+# product related variables
+export out=${base_home}/out/${product}
+export local_toolchain_path=${out}/.toolchain
+export intermediate_home=${out}/intermediate
+export logdir=${out}/log
+export imagedir=${out}/images
+
+. platform/${product}/config
+

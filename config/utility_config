@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# Copyright (c) 2024, Thomas
+#
+
+# shared resource server url
+export shared_server=http://8.210.111.180/share
+
+export toolchain_URL=${shared_server}/toolchain
+export toolchain_path=${HOME}/.toolchain
