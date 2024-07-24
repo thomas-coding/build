@@ -15,12 +15,27 @@ elif [[ ${build_command} != "" ]]; then
     exit 0
 fi
 
+
+
 add_target \"${intermediate}/*.bin\" ${out}
 add_target ${intermediate}/u-boot ${out}
 add_target ${intermediate}/u-boot ${imagedir}
 
+if [[ ${uboot_fip} = 1 ]]; then
+    add_target ${intermediate}/fip.bin ${imagedir}
+fi
+
 make O=${intermediate} ${uboot_config} || exit 1
 make O=${intermediate} -j${build_jobs} all || exit 1
+
+if [[ ${uboot_fip} = 1 ]]; then
+    make O=${intermediate} \
+        FIPTOOLPATH=${fiptool_path} \
+        OPENSBI=${opensbi} \
+        UBOOT=${intermediate}/u-boot.bin \
+        OPENSBI_DTB=${intermediate}/dts/dt.dtb \
+        fip.bin || exit 1
+fi
 
 if [[ ${mkimage_home} != "" ]]; then
     if [ -f ${intermediate}/spl/u-boot-spl.bin ]; then
