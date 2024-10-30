@@ -22,7 +22,7 @@ export opensbi_fw_jump_addr=0x50000000
 export qemu_home=${base_home}/qemu
 export qemu_config_option=" --enable-debug --disable-werror"
 export qemu_target=riscv64-softmmu
-export qemu_no_reconfig=1
+#export qemu_no_reconfig=1
 export qemu_binary=qemu/build/qemu-system-riscv64
 
 # uboot
@@ -34,9 +34,6 @@ export uboot_fit_kernel_image=Image
 export uboot_fit_its=thomas_riscv64.its
 export uboot_fit_its_dir=${uboot_home}/board/thomas/riscv64
 export uboot_fit_itb=thomas_riscv64.itb
-export fiptool_path=${uboot_home}/tools/fiptool
-export opensbi=${imagedir}/fw_jump.bin
-export uboot_fip=1
 
 # kernel
 export kernel_home=${base_home}/linux
@@ -65,7 +62,6 @@ export burn_qemu_binary=qemu-system-riscv64
 export burn_qemu_opt=" \
 -machine thomas-riscv64 \
 -kernel u-boot-spl \
--device loader,file=fip.bin,addr=0x50000000 \
 -device loader,file=u-boot.itb,addr=0x41000000 \
 -device loader,file=thomas_riscv64.itb,addr=0x42000000 \
 -nographic \
@@ -74,7 +70,6 @@ export burn_qemu_opt=" \
 export burn_gdb_binary=riscv64-unknown-linux-gnu-gdb
 export burn_gdb_opt=" \
 -ex 'target remote localhost:1234' \
--ex \"set confirm off\" \
 -ex 'add-symbol-file u-boot-spl' \
 -ex 'add-symbol-file fw_jump.elf' \
 -q"
